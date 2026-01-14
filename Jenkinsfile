@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Cloning source code from GitHub'
-                git branch: 'main', url: 'https://github.com/marjahan19/java-springboot-application.git'
+                git branch: 'main', url: 'https://github.com/marjahan19/java-application.git'
             }
         }
 
@@ -51,3 +51,4 @@ pipeline {
         }
     }
 }
+
