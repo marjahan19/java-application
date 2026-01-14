@@ -13,25 +13,25 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/marjahan19/java-application.git'
             }
         }
+stage('Build') {
+    steps {
+        echo 'Building the project with Maven Wrapper'
+        sh 'chmod +x mvnw'
+        sh './mvnw clean package -DskipTests'
+    }
+}
 
-        stage('Build') {
-            steps {
-                echo 'Building the project with Maven'
-                sh 'mvn clean package -DskipTests'
-            }
+stage('Unit Test') {
+    steps {
+        echo 'Running unit tests'
+        sh './mvnw test'
+    }
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
         }
-
-        stage('Unit Test') {
-            steps {
-                echo 'Running unit tests'
-                sh 'mvn test'
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
-            }
-        }
+    }
+}
 
         stage('Docker Build') {
             steps {
@@ -51,4 +51,5 @@ pipeline {
         }
     }
 }
+
 
