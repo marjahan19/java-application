@@ -15,14 +15,17 @@ pipeline {
         }
 
         stage('Build') {
-            steps {
-                echo 'Building the project with Maven Wrapper'
-                sh '''
-                    sed -i 's/\r$//' mvnw
-                    chmod +x mvnw
-                    ./mvnw clean package -DskipTests
-                '''
-            }
+    steps {
+        echo 'Building the project with Maven Wrapper'
+
+        sh '''
+        chmod +x mvnw
+        ./mvnw -v
+        ./mvnw clean package -DskipTests
+        '''
+    }
+}
+
         }
 
         stage('Unit Test') {
@@ -67,3 +70,4 @@ pipeline {
         }
     }
 }
+
