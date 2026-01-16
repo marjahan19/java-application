@@ -2,70 +2,59 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "marjahan19/java-springboot-app:latest"
+        DOCKER_IMAGE = "marjahanapon/java-app:latest"
+        REGISTRY_CREDENTIALS = "docker-hub-credentials"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                echo 'Cloning source code from GitHub'
                 git branch: 'main', url: 'https://github.com/marjahan19/java-application.git'
             }
         }
 
-        stage('Build') {
+        stage('Maven Build') {
             steps {
-                echo 'Building the project with Maven Wrapper'
-                sh '''
-                    sed -i 's/\r$//' mvnw
-                    chmod +x mvnw
-                    ./mvnw -v
-                    ./mvnw clean package -DskipTests
-                '''
+                sh './mvnw clean package || mvn clean package'
             }
         }
 
-        stage('Unit Test') {
+        stage('Unit Testing') {
             steps {
-                echo 'Running unit tests'
-                sh '''
-                    chmod +x mvnw
-                    ./mvnw test
-                '''
+                sh './mvnw test || mvn test'
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+                    junit '**/target/surefire-reports/*.xml'
                 }
             }
         }
 
         stage('Docker Build') {
             steps {
-                echo 'Building Docker image'
                 sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
         stage('Docker Push') {
             steps {
-                echo 'Pushing Docker image to Docker Hub'
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'docker-hub',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push $DOCKER_IMAGE
-                    '''
+                withCredentials([usernamePassword(credentialsId: "$REGISTRY_CREDENTIALS",
+                                                 usernameVariable: 'DOCKER_USER',
+                                                 passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker push $DOCKER_IMAGE'
                 }
             }
         }
     }
-}
 
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
 
