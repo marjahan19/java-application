@@ -12,7 +12,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Run the app with minimal JDK image
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk AS runtime
 
 WORKDIR /app
 
@@ -24,3 +24,4 @@ EXPOSE 8080
 
 # Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
