@@ -9,7 +9,8 @@ pipeline {
     environment {
         IMAGE_NAME = "marjahanapon/java-app"
         IMAGE_TAG = "latest"
-        DOCKER_CREDENTIALS = credentials('dockerhub-creds')
+        DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
+
     }
 
     stages {
@@ -58,4 +59,5 @@ pipeline {
         }
     }
 }
+
 
