@@ -1,59 +1,60 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven'
+        jdk 'JDK17'
+    }
+
     environment {
-        DOCKER_IMAGE = "marjahanapon/java-app:latest"
-        REGISTRY_CREDENTIALS = "docker-hub-credentials"
+        IMAGE_NAME = "marjahanapon/java-app"
+        IMAGE_TAG = "latest"
+        DOCKER_CREDENTIALS = credentials('dockerhub-creds')
     }
 
     stages {
-        stage('Checkout') {
+
+        stage('Source Code Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/marjahan19/java-application.git'
+                git branch: 'main',
+                    url: 'https://github.com/marjahan19/java-application.git'
             }
         }
 
         stage('Maven Build') {
             steps {
-                sh './mvnw clean package || mvn clean package'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Unit Testing') {
             steps {
-                sh './mvnw test || mvn test'
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
+                sh 'mvn test'
             }
         }
 
-        stage('Docker Build') {
+        stage('Docker Image Build') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
             }
         }
 
-        stage('Docker Push') {
+        stage('Push Image to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: "$REGISTRY_CREDENTIALS",
-                                                 usernameVariable: 'DOCKER_USER',
-                                                 passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker push $DOCKER_IMAGE'
-                }
+                sh '''
+                echo "$DOCKER_CREDENTIALS_PSW" | docker login -u "$DOCKER_CREDENTIALS_USR" --password-stdin
+                docker push $IMAGE_NAME:$IMAGE_TAG
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo "✅ Pipeline completed successfully!"
         }
         failure {
-            echo 'Pipeline failed!'
+            echo "❌ Pipeline failed!"
         }
     }
 }
